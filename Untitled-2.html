@@ -1,0 +1,86 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <title>Powerball Number Generator</title>
+  <style>
+    body{font-family:system-ui,-apple-system,Segoe UI,Roboto,Helvetica,Arial;display:flex;align-items:center;justify-content:center;height:100vh;margin:0;background:#f7fafc}
+    .card{background:#fff;padding:24px;border-radius:12px;box-shadow:0 6px 20px rgba(2,6,23,0.08);text-align:center;width:320px}
+    h1{margin:0 0 12px;font-size:18px}
+    .numbers{display:flex;gap:8px;justify-content:center;margin:16px 0}
+    .ball{width:48px;height:48px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-weight:700}
+    .white{background:#fff;border:2px solid #ddd;color:#111}
+    .power{background:#ef4444;color:#fff}
+    button{padding:10px 14px;border-radius:8px;border:0;background:#111;color:#fff;cursor:pointer}
+    button.secondary{background:#e5e7eb;color:#111;margin-left:8px}
+    .hint{font-size:12px;color:#6b7280;margin-top:10px}
+  </style>
+</head>
+<body>
+  <div class="card">
+    <h1>Powerball Generator</h1>
+    <div id="numbers" class="numbers">—</div>
+    <div>
+      <button id="gen">Generate</button>
+      <button id="copy" class="secondary">Copy</button>
+    </div>
+    <div class="hint">5 white balls (1–69) + Powerball (1–26)</div>
+  </div>
+
+  <script>
+    // Secure random integer inclusive
+    function randIntInclusive(min, max) {
+      const range = max - min + 1;
+      const uint32 = new Uint32Array(1);
+      crypto.getRandomValues(uint32);
+      // divide by 2^32 to get [0,1)
+      const r = uint32[0] / 4294967296;
+      return Math.floor(r * range) + min;
+    }
+
+    function generatePowerball() {
+      const whites = new Set();
+      while (whites.size < 5) {
+        whites.add(randIntInclusive(1, 69));
+      }
+      const whiteArr = Array.from(whites).sort((a,b)=>a-b);
+      const power = randIntInclusive(1, 26);
+      return {white: whiteArr, power};
+    }
+
+    function render({white, power}){
+      const container = document.getElementById('numbers');
+      container.innerHTML = '';
+      white.forEach(n => {
+        const el = document.createElement('div');
+        el.className = 'ball white';
+        el.textContent = n;
+        container.appendChild(el);
+      });
+      const p = document.createElement('div');
+      p.className = 'ball power';
+      p.textContent = power;
+      container.appendChild(p);
+    }
+
+    document.getElementById('gen').addEventListener('click', ()=>{
+      const nums = generatePowerball();
+      render(nums);
+    });
+
+    document.getElementById('copy').addEventListener('click', ()=>{
+      const c = document.getElementById('numbers').innerText.replace(/\s+/g,' ');
+      navigator.clipboard.writeText(c).then(()=>{
+        const b = document.getElementById('copy');
+        const old = b.textContent;
+        b.textContent = 'Copied!';
+        setTimeout(()=> b.textContent = old, 1200);
+      });
+    });
+
+    // generate one on load
+    render(generatePowerball());
+  </script>
+</body>
+</html>
