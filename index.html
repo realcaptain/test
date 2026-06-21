@@ -5,25 +5,49 @@
   <meta name="viewport" content="width=device-width,initial-scale=1" />
   <title>Powerball Number Generator</title>
   <style>
-    body{font-family:system-ui,-apple-system,Segoe UI,Roboto,Helvetica,Arial;display:flex;align-items:center;justify-content:center;height:100vh;margin:0;background:#f7fafc}
-    .card{background:#fff;padding:24px;border-radius:12px;box-shadow:0 6px 20px rgba(2,6,23,0.08);text-align:center;width:320px}
+    :root{
+      --bg: #f7fafc;
+      --card-bg: #ffffff;
+      --text: #111827;
+      --muted: #6b7280;
+      --accent: #ef4444;
+      --button-bg: #111827;
+      --button-fg: #ffffff;
+      --ball-border: #e5e7eb;
+    }
+    .dark{
+      --bg: #0b1220;
+      --card-bg: #071027;
+      --text: #e6eef8;
+      --muted: #9aa9bf;
+      --accent: #fb7185;
+      --button-bg: #e6eef8;
+      --button-fg: #071027;
+      --ball-border: #243447;
+    }
+
+    body{font-family:system-ui,-apple-system,Segoe UI,Roboto,Helvetica,Arial;display:flex;align-items:center;justify-content:center;height:100vh;margin:0;background:var(--bg);color:var(--text)}
+    .card{background:var(--card-bg);padding:24px;border-radius:12px;box-shadow:0 6px 20px rgba(2,6,23,0.08);text-align:center;width:360px}
     h1{margin:0 0 12px;font-size:18px}
     .numbers{display:flex;gap:8px;justify-content:center;margin:16px 0}
     .ball{width:48px;height:48px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-weight:700}
-    .white{background:#fff;border:2px solid #ddd;color:#111}
-    .power{background:#ef4444;color:#fff}
-    button{padding:10px 14px;border-radius:8px;border:0;background:#111;color:#fff;cursor:pointer}
-    button.secondary{background:#e5e7eb;color:#111;margin-left:8px}
-    .hint{font-size:12px;color:#6b7280;margin-top:10px}
+    .white{background:var(--card-bg);border:2px solid var(--ball-border);color:var(--text)}
+    .power{background:var(--accent);color:#fff}
+    button{padding:10px 14px;border-radius:8px;border:0;background:var(--button-bg);color:var(--button-fg);cursor:pointer}
+    button.secondary{background:transparent;color:var(--button-fg);border:1px solid var(--ball-border);margin-left:8px}
+    .controls{display:flex;justify-content:center;gap:8px;align-items:center}
+    .hint{font-size:12px;color:var(--muted);margin-top:10px}
+    .theme-toggle{background:transparent;border:0;color:var(--muted);cursor:pointer;font-size:14px;padding:6px 8px;border-radius:8px}
   </style>
 </head>
 <body>
   <div class="card">
     <h1>Powerball Generator</h1>
     <div id="numbers" class="numbers">—</div>
-    <div>
+    <div class="controls">
       <button id="gen">Generate</button>
       <button id="copy" class="secondary">Copy</button>
+      <button id="theme" class="theme-toggle" aria-pressed="false">Toggle Theme</button>
     </div>
     <div class="hint">5 white balls (1–69) + Powerball (1–26)</div>
   </div>
@@ -34,7 +58,6 @@
       const range = max - min + 1;
       const uint32 = new Uint32Array(1);
       crypto.getRandomValues(uint32);
-      // divide by 2^32 to get [0,1)
       const r = uint32[0] / 4294967296;
       return Math.floor(r * range) + min;
     }
@@ -77,6 +100,24 @@
         b.textContent = 'Copied!';
         setTimeout(()=> b.textContent = old, 1200);
       });
+    });
+
+    // Theme handling
+    const bodyEl = document.body;
+    const themeBtn = document.getElementById('theme');
+    function applyTheme(t){
+      if(t === 'dark') bodyEl.classList.add('dark'); else bodyEl.classList.remove('dark');
+      themeBtn.textContent = t === 'dark' ? 'Light Mode' : 'Dark Mode';
+      themeBtn.setAttribute('aria-pressed', t === 'dark');
+    }
+    const saved = localStorage.getItem('theme');
+    const prefers = window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light';
+    applyTheme(saved || prefers);
+    themeBtn.addEventListener('click', ()=>{
+      const current = bodyEl.classList.contains('dark') ? 'dark' : 'light';
+      const next = current === 'dark' ? 'light' : 'dark';
+      applyTheme(next);
+      localStorage.setItem('theme', next);
     });
 
     // generate one on load
